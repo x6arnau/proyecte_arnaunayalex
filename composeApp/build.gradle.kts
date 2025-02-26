@@ -28,6 +28,9 @@ kotlin {
             implementation(libs.androidx.activity.compose)
         }
         commonMain.dependencies {
+            implementation("androidx.credentials:credentials:1.3.0")
+            implementation ("com.google.android.libraries.identity.googleid:googleid:1.1.1")
+            implementation("org.jetbrains.androidx.navigation:navigation-compose:2.8.0-alpha10")
             implementation("io.github.cdimascio:dotenv-kotlin:6.5.0")
             implementation(platform("io.github.jan-tennert.supabase:bom:3.0.3"))
             implementation("io.github.jan-tennert.supabase:postgrest-kt")

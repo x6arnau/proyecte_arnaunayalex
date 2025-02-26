@@ -16,19 +16,20 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import org.jetbrains.compose.ui.tooling.preview.Preview
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 
 
 @Composable
 @Preview
 fun App() {
     MaterialTheme {
-        Surface(
-            modifier = Modifier.fillMaxSize()
-        ) {
-            TodoList()
-        }
+        val controller = rememberNavController()
     }
 }
+//pantalla iniciar sesió, añadir tabla (NAY)
+
 
 @Serializable
 data class TodoItem(val id: Int, val name: String)
@@ -38,28 +39,32 @@ val supabase = createSupabaseClient(
     supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndxeWJsZGlic2xsYXNzdXhlcHh5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk5OTY3MzksImV4cCI6MjA1NTU3MjczOX0.9CbU2ykmNoUlgz3EVv3i7geVTl7s5N8QfTliD2QL4Jo"
 )
 {
-    install(Postgrest)
+    install(GoTrue)
+    install(ComposeAuth) {
+        nativeGoogleLogin("https://wqybldibsllassuxepxy.supabase.co/auth/v1/callback") //Use the Web Client ID, not the Android one!
+    }
 }
 
-@Composable
-fun TodoList() {
-    var items by remember { mutableStateOf<List<TodoItem>>(listOf()) }
-    LaunchedEffect(Unit) {
-        withContext(Dispatchers.IO) {
-            items = supabase.from("ingredients")
-                .select().decodeList<TodoItem>()
-        }
-    }
-    LazyColumn {
-        items(
-            items,
-            key = { item -> item.id },
-        ) { item ->
-            Text(
-                item.name,
-                modifier = Modifier.padding(8.dp),
-            )
-        }
-    }
-}
+//@Composable
+//fun TodoList() {
+//    var items by remember { mutableStateOf<List<TodoItem>>(listOf()) }
+//    LaunchedEffect(Unit) {
+//        withContext(Dispatchers.IO) {
+//            items = supabase.from("ingredients")
+//                .select().decodeList<TodoItem>()
+//        }
+//    }
+//    LazyColumn {
+//        items(
+//            items,
+//            key = { item -> item.id },
+//        ) { item ->
+//            Text(
+//                item.name,
+//                modifier = Modifier.padding(8.dp),
+//            )
+//        }
+//    }
+//}
+
 
