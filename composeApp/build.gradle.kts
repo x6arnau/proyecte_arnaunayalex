@@ -8,6 +8,7 @@ plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
+    kotlin("kapt")
 }
 
 kotlin {
@@ -29,18 +30,21 @@ kotlin {
         }
         commonMain.dependencies {
             implementation("androidx.credentials:credentials:1.3.0")
-            implementation ("com.google.android.libraries.identity.googleid:googleid:1.1.1")
+            implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
             implementation("org.jetbrains.androidx.navigation:navigation-compose:2.8.0-alpha10")
             implementation("io.github.cdimascio:dotenv-kotlin:6.5.0")
             implementation(platform("io.github.jan-tennert.supabase:bom:3.0.3"))
-            implementation("io.github.jan-tennert.supabase:postgrest-kt")
-            implementation("io.github.jan-tennert.supabase:auth-kt")
-            implementation("io.github.jan-tennert.supabase:realtime-kt")
+            implementation("io.github.jan-tennert.supabase:postgrest-kt:3.0.3")
+            implementation("io.github.jan-tennert.supabase:auth-kt:3.0.3")
+            implementation ("io.github.jan-tennert.supabase:storage-kt:3.0.3")
             implementation("io.ktor:ktor-client-cio:3.0.3")
-
-            implementation("io.ktor:ktor-client-serialization:2.3.8")
+            implementation("io.ktor:ktor-client-serialization:3.0.3")
+            implementation("io.ktor:ktor-client-json:3.0.3")
+            implementation("io.ktor:ktor-client-logging:3.0.3")
+            implementation("io.ktor:ktor-client-auth:3.0.3")
+            implementation("io.github.jan-tennert.supabase:compose-auth:3.0.3")
             implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.0")
-
+            implementation ("com.google.android.libraries.identity.googleid:googleid:1.1.1")
             implementation(compose.runtime)
             implementation(compose.foundation)
             implementation(compose.material)
@@ -49,10 +53,16 @@ kotlin {
             implementation(compose.components.uiToolingPreview)
             implementation(libs.androidx.lifecycle.viewmodel)
             implementation(libs.androidx.lifecycle.runtime.compose)
+            implementation("com.google.dagger:dagger:2.48")
+            implementation("com.google.dagger:dagger-android-support:2.48")
+
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutines.swing)
+            // Añade esto fuera del bloque commonMain.dependencies
+            implementation("com.google.dagger:dagger:2.48")
+            implementation("com.google.dagger:dagger-android-support:2.48")
         }
     }
 }
