@@ -182,6 +182,7 @@ fun SandwichesScreen(navController: NavController, supabase: SupabaseClient) {
                             Text(sandwich.name)
                             Text(sandwich.description)
                             Text("${sandwich.price}€")
+                            //TODO añadir botón para añadir al carrito
                         }
                     }
                 }
@@ -192,7 +193,7 @@ fun SandwichesScreen(navController: NavController, supabase: SupabaseClient) {
 
 @Composable
 fun showMessageIntro() {
-    var openAlertDialog by remember { mutableStateOf(false) }
+    var openAlertDialog by remember { mutableStateOf(true) }
 
     if (openAlertDialog) {
         AlertDialog(
@@ -206,14 +207,7 @@ fun showMessageIntro() {
                 }) {
                     Text("Confirm")
                 }
-            },
-            dismissButton = {
-                TextButton(onClick = { openAlertDialog = false }) {
-                    Text("Dismiss")
-                }
-            },
-            //
-            //icon = { Icon(Icons.Default.Info, contentDescription = null) }
+            }
         )
     }
 }
