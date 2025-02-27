@@ -3,12 +3,14 @@ import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
+    id("app.cash.sqldelight") version "2.0.2"
     kotlin("plugin.serialization") version "2.0.0"
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     kotlin("kapt")
+
 }
 
 kotlin {
@@ -30,7 +32,7 @@ kotlin {
         }
         commonMain.dependencies {
             implementation("androidx.credentials:credentials:1.3.0")
-
+            implementation(compose.material3)
             implementation("androidx.credentials:credentials-play-services-auth:1.3.0")
             implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
             implementation("org.jetbrains.androidx.navigation:navigation-compose:2.8.0-alpha10")
@@ -57,6 +59,7 @@ kotlin {
             implementation(libs.androidx.lifecycle.runtime.compose)
             implementation("com.google.dagger:dagger:2.48")
             implementation("com.google.dagger:dagger-android-support:2.48")
+            implementation("org.slf4j:slf4j-nop:1.7.36")
 
         }
         desktopMain.dependencies {
@@ -65,6 +68,7 @@ kotlin {
             // Añade esto fuera del bloque commonMain.dependencies
             implementation("com.google.dagger:dagger:2.48")
             implementation("com.google.dagger:dagger-android-support:2.48")
+            implementation("app.cash.sqldelight:sqlite-driver:2.0.2")
         }
     }
 }
@@ -97,6 +101,8 @@ android {
 }
 
 dependencies {
+    implementation(libs.postgrest.kt.android.debug)
+    implementation(libs.postgrest.kt.android.debug)
     debugImplementation(compose.uiTooling)
 }
 
