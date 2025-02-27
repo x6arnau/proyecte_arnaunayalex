@@ -30,6 +30,8 @@ kotlin {
         }
         commonMain.dependencies {
             implementation("androidx.credentials:credentials:1.3.0")
+
+            implementation("androidx.credentials:credentials-play-services-auth:1.3.0")
             implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
             implementation("org.jetbrains.androidx.navigation:navigation-compose:2.8.0-alpha10")
             implementation("io.github.cdimascio:dotenv-kotlin:6.5.0")
