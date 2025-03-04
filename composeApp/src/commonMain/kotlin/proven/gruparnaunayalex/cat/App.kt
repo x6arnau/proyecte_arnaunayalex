@@ -40,12 +40,12 @@ fun App() {
     MaterialTheme {
         val navController = rememberNavController()
         Surface(modifier = Modifier.fillMaxSize()) {
-                NavHost(navController = navController, startDestination = ListSandwiches) {
-                composable<Login>{
-                    LoginScreen(onLoginSuccess = {
-                        (ListSandwiches)
-                    })
-                }
+                NavHost(navController = navController, startDestination = Login) {
+                    composable<Login> {
+                        LoginScreen(navController = navController, onLoginSuccess = {
+                            navController.navigate(ListSandwiches)
+                        })
+                    }
                 composable<ListSandwiches> {
                     SandwichesScreen(navController, supabase)
                 }
@@ -74,11 +74,8 @@ val supabase = createSupabaseClient(
 }
 
 @Composable
-fun LoginScreen(onLoginSuccess: () -> Unit,) {
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
+fun LoginScreen(navController: NavController, onLoginSuccess: () -> Unit) {
     var errorMessage by remember { mutableStateOf<String?>(null) }
-
     val authState = supabase.composeAuth.rememberSignInWithGoogle(
         onResult = { result ->
             when (result) {
@@ -89,48 +86,24 @@ fun LoginScreen(onLoginSuccess: () -> Unit,) {
             }
         }
     )
-
     Column(
-        modifier = Modifier.fillMaxSize().padding(16.dp),
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        TextField(
-            value = email,
-            onValueChange = { email = it },
-            label = { Text("Email") }
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        TextField(
-            value = password,
-            onValueChange = { password = it },
-            label = { Text("Password") },
-            visualTransformation = PasswordVisualTransformation()
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        Button(onClick = {
-            CoroutineScope(Dispatchers.Main).launch {
-                try {
-                    withContext(Dispatchers.IO) {
-                        supabase.auth.signInWith(Email) {
-                            this.email = email
-                            this.password = password
-                        }
-                    }
-                    //SandwichesScreen(navController, supa)
-                } catch (e: Exception) {
-                    errorMessage = "Login failed: ${e.message}"
-                }
-            }
-        }) {
-            Text("Login")
-        }
-        Spacer(modifier = Modifier.height(16.dp))
         Button(onClick = { authState.startFlow() }) {
             Text("Login with Google")
         }
+        // Optional: Display error messages if you want user feedback
         errorMessage?.let {
-            Text(it, color = MaterialTheme.colors.error)
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = it,
+                color = MaterialTheme.colors.error,
+                textAlign = TextAlign.Center
+            )
         }
     }
 }
