@@ -70,6 +70,7 @@ val supabase = createSupabaseClient(
              ) // Replace with your Web Client ID
 
     }
+    install(Auth)
     install(Postgrest)
 }
 
