@@ -16,8 +16,10 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.Auth
+import io.github.jan.supabase.auth.FlowType
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.builtin.Email
+import io.github.jan.supabase.auth.status.SessionStatus
 import io.github.jan.supabase.compose.auth.ComposeAuth
 import io.github.jan.supabase.compose.auth.composeAuth
 import io.github.jan.supabase.compose.auth.composable.NativeSignInResult
@@ -34,79 +36,166 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
+object SupabaseProvider {
+    val client = createSupabaseClient(
+        supabaseUrl = "https://wqybldibsllassuxepxy.supabase.co",
+        supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndxeWJsZGlic2xsYXNzdXhlcHh5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk5OTY3MzksImV4cCI6MjA1NTU3MjczOX0.9CbU2ykmNoUlgz3EVv3i7geVTl7s5N8QfTliD2QL4Jo"
+    ) {
+        install(Auth){
+            flowType = FlowType.PKCE
+        }
+        install(ComposeAuth) {
+            googleNativeLogin("751473724477-0ncgg8ohhufjjbatot4nb0onsj6elsgr.apps.googleusercontent.com")
+        }
+        install(Postgrest)
+    }
+}
+
+sealed class AuthState {
+    object Checking : AuthState()
+    object Authenticated : AuthState()
+    object Unauthenticated : AuthState()
+}
+
 @Composable
 @Preview
 fun App() {
+    val supabase = SupabaseProvider.client
+    var authState by remember { mutableStateOf<AuthState>(AuthState.Checking) }
+
+    LaunchedEffect(Unit) {
+        authState = if (supabase.auth.currentSessionOrNull() != null) {
+            AuthState.Authenticated
+        } else {
+            AuthState.Unauthenticated
+        }
+
+        supabase.auth.sessionStatus.collect { status ->
+            authState = when(status) {
+                is SessionStatus.Authenticated -> AuthState.Authenticated
+                is SessionStatus.NotAuthenticated -> AuthState.Unauthenticated
+                SessionStatus.Initializing -> AuthState.Checking
+                is SessionStatus.RefreshFailure -> AuthState.Unauthenticated
+            }
+        }
+    }
+
     MaterialTheme {
         val navController = rememberNavController()
         Surface(modifier = Modifier.fillMaxSize()) {
-                NavHost(navController = navController, startDestination = Login) {
-                    composable<Login> {
-                        LoginScreen(navController = navController, onLoginSuccess = {
-                            navController.navigate(ListSandwiches)
-                        })
+            when (authState) {
+                AuthState.Checking -> {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
                     }
-                composable<ListSandwiches> {
-                    SandwichesScreen(navController, supabase)
                 }
-                composable<ListCesta> {
-                    CestaScreen(navController, supabase)
+                AuthState.Unauthenticated -> {
+                    LoginScreen(navController = navController,supabase)
                 }
-                composable<LogOut> {
-                    LogOutScreen(navController, supabase)
+                AuthState.Authenticated -> {
+                    NavHost(navController = navController, startDestination = ListSandwiches) {
+                        composable<ListSandwiches> {
+                            SandwichesScreen(navController, supabase)
+                        }
+                        composable<ListCesta> {
+                            CestaScreen(navController, supabase)
+                        }
+                        composable<LogOut> {
+                            LogOutScreen(navController, supabase)
+                        }
+                    }
                 }
             }
         }
     }
 }
-
-val supabase = createSupabaseClient(
-    supabaseUrl = "https://wqybldibsllassuxepxy.supabase.co",
-    supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndxeWJsZGlic2xsYXNzdXhlcHh5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk5OTY3MzksImV4cCI6MjA1NTU3MjczOX0.9CbU2ykmNoUlgz3EVv3i7geVTl7s5N8QfTliD2QL4Jo"
-) {
-    install(Auth)
-    install(ComposeAuth) {
-        googleNativeLogin("751473724477-enm8q34ru1gg91tfbja380tes6pptp74.apps.googleusercontent.com"
-             ) // Replace with your Web Client ID
-
-    }
-    install(Postgrest)
-}
-
 @Composable
-fun LoginScreen(navController: NavController, onLoginSuccess: () -> Unit) {
-    var errorMessage by remember { mutableStateOf<String?>(null) }
+fun LoginScreen(
+    navController: NavController,
+    supabase: SupabaseClient
+) {
+    val scope = rememberCoroutineScope()
     val authState = supabase.composeAuth.rememberSignInWithGoogle(
+
         onResult = { result ->
             when (result) {
-                NativeSignInResult.ClosedByUser -> errorMessage = "Google Sign-In cancelled"
-                is NativeSignInResult.Error -> errorMessage = "Google Sign-In error: ${result.message}"
-                is NativeSignInResult.NetworkError -> errorMessage = "Network error: ${result.message}"
-                NativeSignInResult.Success -> onLoginSuccess()
+                is NativeSignInResult.Success -> {
+                    println("Login successful: ${supabase.auth.currentSessionOrNull()}")
+                }
+                is NativeSignInResult.Error -> println("Error: ${result.message}")
+                is NativeSignInResult.ClosedByUser -> println("Login cancelled by user")
+                is NativeSignInResult.NetworkError -> println("Network error: ${result.message}")
             }
         }
     )
+
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        Text("Welcome to My App")
         Button(onClick = { authState.startFlow() }) {
-            Text("Login with Google")
+            Text("Sign in with Google")
         }
-        // Optional: Display error messages if you want user feedback
-        errorMessage?.let {
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                text = it,
-                color = MaterialTheme.colors.error,
-                textAlign = TextAlign.Center
-            )
+
+        Spacer(modifier = Modifier.height(16.dp))
+        Text("Or sign up with email")
+        var email by remember { mutableStateOf("") }
+        var password by remember { mutableStateOf("") }
+
+        TextField(
+            value = email,
+            onValueChange = { email = it },
+            label = { Text("Email") },
+            modifier = Modifier.padding(8.dp)
+        )
+
+        TextField(
+            value = password,
+            onValueChange = { password = it },
+            label = { Text("Password") },
+            visualTransformation = PasswordVisualTransformation(),
+            modifier = Modifier.padding(8.dp)
+        )
+
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.padding(8.dp)
+        ) {
+            Button(onClick = {
+                // Inicio de sesión con email
+                scope.launch {
+                    try {
+                        supabase.auth.signInWith(Email) {
+                            this.email = email
+                            this.password = password
+                        }
+                    } catch (e: Exception) {
+                        println("Login error: ${e.message}")
+                    }
+                }
+            }) {
+                Text("Sign In")
+            }
+
+            Button(onClick = {
+                scope.launch {
+                    try {
+                        supabase.auth.signUpWith(Email) {
+                            this.email = email
+                            this.password = password
+                        }
+                    } catch (e: Exception) {
+                        println("Registration error: ${e.message}")
+                    }
+                }
+            }) {
+                Text("Sign Up")
+            }
         }
     }
 }
+
 
 @Serializable
 object ListSandwiches
@@ -204,6 +293,8 @@ object LogOut
 
 @Composable
 fun LogOutScreen(navController: NavController, supabase: SupabaseClient) {
+    val scope = rememberCoroutineScope()
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally
     ){
@@ -212,10 +303,13 @@ fun LogOutScreen(navController: NavController, supabase: SupabaseClient) {
         Row(
             modifier = Modifier.padding(8.dp)
         ){
-            Column() {  }
-            Button(onClick = {navController.navigate(Login)}){
+            Button(onClick = {
+                scope.launch {
+                    supabase.auth.signOut()
+                    navController.navigate(ListSandwiches)
+                }
+            }){
                 Text("Yes")
-
             }
             Button(onClick = {navController.navigate(ListSandwiches)}){
                 Text("No")
