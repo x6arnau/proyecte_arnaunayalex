@@ -43,12 +43,10 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.sp
-import androidx.room.Database
 import app.cash.sqldelight.db.SqlDriver
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import org.jetbrains.compose.ui.tooling.preview.Preview
-
 
 object SupabaseProvider {
     val client = createSupabaseClient(
@@ -64,7 +62,6 @@ object SupabaseProvider {
         install(Postgrest)
     }
 }
-
 sealed class AuthState {
     object Checking : AuthState()
     object Authenticated : AuthState()

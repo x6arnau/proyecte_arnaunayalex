@@ -13,7 +13,7 @@ class MainActivity : ComponentActivity() {
             this.applicationContext.deleteDatabase(DatabaseConfig.name)
         }
 
-        val driver = AndroidSqliteDriver(Database.Schema, this.applicationContext, DatabaseConfig.name)
+      val driver = AndroidSqliteDriver(Database.Schema, this.applicationContext, DatabaseConfig.name)
 
         setContent {
             App(driver)
