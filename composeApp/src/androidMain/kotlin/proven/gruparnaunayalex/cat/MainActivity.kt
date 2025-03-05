@@ -1,5 +1,4 @@
 package proven.gruparnaunayalex.cat
-
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -10,14 +9,21 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        if (DatabaseConfig.development) {
+            this.applicationContext.deleteDatabase(DatabaseConfig.name)
+        }
+
+        val driver = AndroidSqliteDriver(Database.Schema, this.applicationContext, DatabaseConfig.name)
+
         setContent {
-            App()
+            App(driver)
         }
     }
 }
 
-@Preview
-@Composable
-fun AppAndroidPreview() {
-    App()
-}
+
+//@Preview
+//@Composable
+//fun AppAndroidPreview() {
+//    App()
+//}

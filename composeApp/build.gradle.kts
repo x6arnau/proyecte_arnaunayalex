@@ -29,6 +29,7 @@ kotlin {
         androidMain.dependencies {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
+            implementation("app.cash.sqldelight:android-driver:2.0.2")
         }
         commonMain.dependencies {
             implementation("io.coil-kt.coil3:coil-compose:3.1.0")
@@ -78,7 +79,8 @@ kotlin {
 
 android {
     namespace = "proven.gruparnaunayalex.cat"
-    compileSdk = libs.versions.android.compileSdk.get().toInt()
+    compileSdk = 35
+    // libs.versions.android.compileSdk.get().toInt()
 
     defaultConfig {
         applicationId = "proven.gruparnaunayalex.cat"
@@ -106,6 +108,8 @@ android {
 dependencies {
     implementation(libs.postgrest.kt.android.debug)
     implementation(libs.postgrest.kt.android.debug)
+    implementation(libs.androidx.room.common)
+    implementation(libs.firebase.database.ktx)
     debugImplementation(compose.uiTooling)
 }
 
@@ -117,6 +121,14 @@ compose.desktop {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "proven.gruparnaunayalex.cat"
             packageVersion = "1.0.0"
+        }
+    }
+}
+sqldelight {
+    databases {
+        create("Database") {
+            packageName.set("proven.gruparnaunayalex.cat")
+            dialect("app.cash.sqldelight:sqlite-3-38-dialect:2.0.2")
         }
     }
 }

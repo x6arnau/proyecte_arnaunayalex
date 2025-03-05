@@ -22,7 +22,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.border
-import androidx.compose.foundation.shape.CircleShape
 import coil3.compose.AsyncImage
 import io.github.jan.supabase.auth.providers.Discord
 import io.github.jan.supabase.auth.providers.Github
@@ -37,13 +36,19 @@ import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.query.Columns
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.sp
+import androidx.room.Database
+import app.cash.sqldelight.db.SqlDriver
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import org.jetbrains.compose.ui.tooling.preview.Preview
+
 
 object SupabaseProvider {
     val client = createSupabaseClient(
@@ -65,10 +70,18 @@ sealed class AuthState {
     object Authenticated : AuthState()
     object Unauthenticated : AuthState()
 }
+object DatabaseConfig {
+    val name: String = "pets.db"
+    val development: Boolean = true
+}
 
 @Composable
 @Preview
-fun App() {
+fun App(sqlDriver: SqlDriver) {
+    val database = Database(sqlDriver)
+    Database.Schema.create(sqlDriver)
+
+
     val supabase = SupabaseProvider.client
     var authState by remember { mutableStateOf<AuthState>(AuthState.Checking) }
 
@@ -88,6 +101,7 @@ fun App() {
             }
         }
     }
+    //interface common cada uno implementación completa
 
     MaterialTheme {
         val navController = rememberNavController()
@@ -195,7 +209,7 @@ fun LoginScreen(
         LaunchedEffect(isloggedWithDiscord) {
             if(isloggedWithDiscord){
                 try {
-                    supabase.auth.signInWith(Discord, redirectUrl = "https://wqybldibsllassuxepxy.supabase.co/auth/v1/callback") {
+                    supabase.auth.signInWith(Discord, redirectUrl = "https://discord.com/oauth2/authorize?client_id=1346859355982659706&response_type=code&redirect_uri=https%3A%2F%2Fwqybldibsllassuxepxy.supabase.co%2Fauth%2Fv1%2Fcallback&scope=identify+email") {
                     }
                 } catch (e: Exception) {
                     println("Registration error: ${e.message}")
@@ -243,7 +257,10 @@ fun LoginScreen(
             modifier = Modifier.padding(8.dp)
         ) {
 
-            Button(onClick = { authState.startFlow() }) {
+            Button(onClick = { authState.startFlow() },
+                colors = ButtonDefaults.buttonColors(
+                    backgroundColor = Color.White
+                )) {
                 Row(
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
@@ -251,11 +268,13 @@ fun LoginScreen(
                     AsyncImage(
                         model = "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/800px-Google_%22G%22_logo.svg.png", // URL de la imagen
                         contentDescription = "Discord Logo",
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(35.dp)
                     )
                 }
             }
-            Button(onClick = { isloggedWithDiscord = true }) {
+            Button(onClick = { isloggedWithDiscord = true },colors = ButtonDefaults.buttonColors(
+                backgroundColor = Color.White
+            )) {
                 Row(
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
@@ -263,19 +282,21 @@ fun LoginScreen(
                     AsyncImage(
                         model = "https://assets-global.website-files.com/6257adef93867e50d84d30e2/636e0a6a49cf127bf92de1e2_icon_clyde_blurple_RGB.png", // URL de la imagen
                         contentDescription = "Discord Logo",
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(35.dp)
                     )
                 }
             }
-            Button(onClick = { isloggedWithGithub = true }) {
+            Button(onClick = { isloggedWithGithub = true },colors = ButtonDefaults.buttonColors(
+                backgroundColor = Color.White
+            )) {
                 Row(
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     AsyncImage(
-                        model = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTKfpcT9pukR3OGAg5MzGXR0aopy7CRbEGjQYeprsv57ecKJlo4eRiZYuou9e_RAtuseHE&usqp=CAU",
+                        model = "https://cdn4.iconfinder.com/data/icons/social-media-logos-6/512/71-github-512.png",
                         contentDescription = "Github Logo",
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(35.dp)
                     )
                 }
             }
@@ -314,7 +335,7 @@ data class Sandwich(
     val name: String,
     val description: String,
     val price: Double,
-    val url: String //TODO: Add url field
+    val url: String
 )
 
 @Composable
@@ -336,7 +357,15 @@ fun SandwichesScreen(navController: NavController, supabase: SupabaseClient) {
     Column {
         Nav(navController)
         Spacer(modifier = Modifier.height(16.dp))
-        Text("Sandwiches available", modifier = Modifier.align(Alignment.CenterHorizontally))
+        Row(
+            modifier = Modifier
+                .align(Alignment.Start)
+                .padding(start = 26.dp)
+        ) {
+            Text("Image:", fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.width(88.dp))
+            Text("Description:", fontWeight = FontWeight.Bold)
+        }
         when {
             isLoading -> CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
             else -> LazyColumn {
@@ -369,9 +398,18 @@ fun SandwichesScreen(navController: NavController, supabase: SupabaseClient) {
                             Column(
                                 modifier = Modifier.weight(1f)
                             ) {
-                                Text(sandwich.name)
+                                Text(sandwich.name, fontStyle = FontStyle.Italic)
                                 Text(sandwich.description)
-                                Text("${sandwich.price}€")
+                                // preu amb dos decimals, enters format normal i decimals tamany 12sp
+                                Text(
+                                    buildAnnotatedString {
+                                        append("${sandwich.price.toInt()}")
+                                        withStyle(style = SpanStyle(fontSize = 12.sp)) {
+                                            append(".${(sandwich.price * 100).toInt() % 100}€")
+                                        }
+                                    },
+                                    color = Color.Red
+                                )
                             }
                             Button(
                                 onClick = { CartState.addItem(sandwich) }
@@ -482,7 +520,7 @@ fun LogOutScreen(navController: NavController, supabase: SupabaseClient) {
         horizontalAlignment = Alignment.CenterHorizontally
     ){
         Nav(navController)
-        Text("are you sure to go out?")
+        Text("Are you sure to go out?")
         Row(
             modifier = Modifier.padding(8.dp)
         ){
