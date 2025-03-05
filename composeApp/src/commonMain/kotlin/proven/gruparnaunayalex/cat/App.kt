@@ -18,6 +18,8 @@ import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.auth.FlowType
 import io.github.jan.supabase.auth.auth
+import io.github.jan.supabase.auth.providers.Discord
+import io.github.jan.supabase.auth.providers.Github
 import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.auth.status.SessionStatus
 import io.github.jan.supabase.compose.auth.ComposeAuth
@@ -115,28 +117,11 @@ fun LoginScreen(
     supabase: SupabaseClient
 ) {
     val scope = rememberCoroutineScope()
-    val authState = supabase.composeAuth.rememberSignInWithGoogle(
-
-        onResult = { result ->
-            when (result) {
-                is NativeSignInResult.Success -> {
-                    println("Login successful: ${supabase.auth.currentSessionOrNull()}")
-                }
-                is NativeSignInResult.Error -> println("Error: ${result.message}")
-                is NativeSignInResult.ClosedByUser -> println("Login cancelled by user")
-                is NativeSignInResult.NetworkError -> println("Network error: ${result.message}")
-            }
-        }
-    )
-
     Column(
+
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("Welcome to My App")
-        Button(onClick = { authState.startFlow() }) {
-            Text("Sign in with Google")
-        }
 
         Spacer(modifier = Modifier.height(16.dp))
         Text("Or sign up with email")
@@ -192,6 +177,51 @@ fun LoginScreen(
             }) {
                 Text("Sign Up")
             }
+            //dc
+            Button(onClick = {
+                scope.launch {
+                    try {
+                        supabase.auth.signInWith(Discord, redirectUrl = "https://wqybldibsllassuxepxy.supabase.co/auth/v1/callback") {
+                        }
+                    } catch (e: Exception) {
+                        println("Registration error: ${e.message}")
+                    }
+                }
+            }) {
+                Text("Sign in with Discord")
+            }
+
+            Button(onClick = {
+                scope.launch {
+                    try {
+                        supabase.auth.signInWith(Github, redirectUrl = "https://wqybldibsllassuxepxy.supabase.co/auth/v1/callback") {
+                        }
+                    } catch (e: Exception) {
+                        println("Registration error: ${e.message}")
+                    }
+                }
+            }) {
+                Text("Sign in with Github")
+            }
+
+            val authState = supabase.composeAuth.rememberSignInWithGoogle(
+
+                onResult = { result ->
+                    when (result) {
+                        is NativeSignInResult.Success -> {
+                            println("Login successful: ${supabase.auth.currentSessionOrNull()}")
+                        }
+                        is NativeSignInResult.Error -> println("Error: ${result.message}")
+                        is NativeSignInResult.ClosedByUser -> println("Login cancelled by user")
+                        is NativeSignInResult.NetworkError -> println("Network error: ${result.message}")
+                    }
+                }
+            )
+            Button(onClick = { authState.startFlow() }) {
+                Text("Sign in with Google")
+            }
+
+
         }
     }
 }
