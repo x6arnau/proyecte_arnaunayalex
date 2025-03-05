@@ -92,7 +92,7 @@ fun App() {
                     }
                 }
                 AuthState.Unauthenticated -> {
-                    LoginScreen(navController = navController,supabase)
+                    LoginScreen(supabase)
                 }
                 AuthState.Authenticated -> {
                     NavHost(navController = navController, startDestination = ListSandwiches) {
@@ -113,10 +113,8 @@ fun App() {
 }
 @Composable
 fun LoginScreen(
-    navController: NavController,
     supabase: SupabaseClient
 ) {
-    val scope = rememberCoroutineScope()
     Column(
 
         verticalArrangement = Arrangement.Center,
@@ -174,7 +172,6 @@ fun LoginScreen(
             }else{
                 println("No se ha logeado")
             }
-
         }
         LaunchedEffect(isloggedWithGithub) {
             if(isloggedWithGithub){
@@ -248,7 +245,6 @@ fun LoginScreen(
             Button(onClick = { authState.startFlow() }) {
                 Text("Sign in with Google")
             }
-
 
         }
     }
