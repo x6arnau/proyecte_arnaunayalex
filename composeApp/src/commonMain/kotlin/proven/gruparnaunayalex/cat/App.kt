@@ -127,6 +127,81 @@ fun LoginScreen(
         Text("Or sign up with email")
         var email by remember { mutableStateOf("") }
         var password by remember { mutableStateOf("") }
+        var isloggedWithEmail by remember { mutableStateOf(false) }
+        var isregisterWithEmail by remember { mutableStateOf(false) }
+        var isloggedWithGithub by remember { mutableStateOf(false) }
+        var isloggedWithDiscord by remember { mutableStateOf(false) }
+
+        val authState = supabase.composeAuth.rememberSignInWithGoogle(
+
+            onResult = { result ->
+                when (result) {
+                    is NativeSignInResult.Success -> {
+                        println("Login successful: ${supabase.auth.currentSessionOrNull()}")
+                    }
+                    is NativeSignInResult.Error -> println("Error: ${result.message}")
+                    is NativeSignInResult.ClosedByUser -> println("Login cancelled by user")
+                    is NativeSignInResult.NetworkError -> println("Network error: ${result.message}")
+                }
+            }
+        )
+
+        LaunchedEffect(isloggedWithEmail) {
+            if(isloggedWithEmail){
+                try {
+                    supabase.auth.signInWith(Email) {
+                        this.email = email
+                        this.password = password
+                    }
+                } catch (e: Exception) {
+                    println("Login error: ${e.message}")
+                }
+            }else{
+                println("No se ha logeado")
+            }
+
+        }
+        LaunchedEffect(isregisterWithEmail) {
+            if(isregisterWithEmail){
+                try {
+                    supabase.auth.signUpWith(Email) {
+                        this.email = email
+                        this.password = password
+                    }
+                } catch (e: Exception) {
+                    println("Registration error: ${e.message}")
+                }
+            }else{
+                println("No se ha logeado")
+            }
+
+        }
+        LaunchedEffect(isloggedWithGithub) {
+            if(isloggedWithGithub){
+                try {
+                    supabase.auth.signInWith(Github, redirectUrl = "https://wqybldibsllassuxepxy.supabase.co/auth/v1/callback") {
+                    }
+                } catch (e: Exception) {
+                    println("Registration error: ${e.message}")
+                }
+            }else{
+                println("No se ha logeado")
+            }
+
+        }
+        LaunchedEffect(isloggedWithDiscord) {
+            if(isloggedWithDiscord){
+                try {
+                    supabase.auth.signInWith(Discord, redirectUrl = "https://wqybldibsllassuxepxy.supabase.co/auth/v1/callback") {
+                    }
+                } catch (e: Exception) {
+                    println("Registration error: ${e.message}")
+                }
+            }else{
+                println("No se ha logeado")
+            }
+
+        }
 
         TextField(
             value = email,
@@ -148,75 +223,28 @@ fun LoginScreen(
             modifier = Modifier.padding(8.dp)
         ) {
             Button(onClick = {
-                // Inicio de sesión con email
-                scope.launch {
-                    try {
-                        supabase.auth.signInWith(Email) {
-                            this.email = email
-                            this.password = password
-                        }
-                    } catch (e: Exception) {
-                        println("Login error: ${e.message}")
-                    }
-                }
+                isloggedWithEmail = true
             }) {
                 Text("Sign In")
             }
 
             Button(onClick = {
-                scope.launch {
-                    try {
-                        supabase.auth.signUpWith(Email) {
-                            this.email = email
-                            this.password = password
-                        }
-                    } catch (e: Exception) {
-                        println("Registration error: ${e.message}")
-                    }
-                }
+                isregisterWithEmail = true
             }) {
                 Text("Sign Up")
             }
-            //dc
             Button(onClick = {
-                scope.launch {
-                    try {
-                        supabase.auth.signInWith(Discord, redirectUrl = "https://wqybldibsllassuxepxy.supabase.co/auth/v1/callback") {
-                        }
-                    } catch (e: Exception) {
-                        println("Registration error: ${e.message}")
-                    }
-                }
+                isloggedWithDiscord = true
             }) {
                 Text("Sign in with Discord")
             }
 
             Button(onClick = {
-                scope.launch {
-                    try {
-                        supabase.auth.signInWith(Github, redirectUrl = "https://wqybldibsllassuxepxy.supabase.co/auth/v1/callback") {
-                        }
-                    } catch (e: Exception) {
-                        println("Registration error: ${e.message}")
-                    }
-                }
+                isloggedWithGithub = true
             }) {
                 Text("Sign in with Github")
             }
 
-            val authState = supabase.composeAuth.rememberSignInWithGoogle(
-
-                onResult = { result ->
-                    when (result) {
-                        is NativeSignInResult.Success -> {
-                            println("Login successful: ${supabase.auth.currentSessionOrNull()}")
-                        }
-                        is NativeSignInResult.Error -> println("Error: ${result.message}")
-                        is NativeSignInResult.ClosedByUser -> println("Login cancelled by user")
-                        is NativeSignInResult.NetworkError -> println("Network error: ${result.message}")
-                    }
-                }
-            )
             Button(onClick = { authState.startFlow() }) {
                 Text("Sign in with Google")
             }
