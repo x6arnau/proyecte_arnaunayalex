@@ -77,6 +77,10 @@ object DatabaseConfig {
 fun App(sqlDriver: SqlDriver) {
     val database = Database(sqlDriver)
     Database.Schema.create(sqlDriver)
+    if (DatabaseConfig.development) {
+
+    }
+
 
 
     val supabase = SupabaseProvider.client
