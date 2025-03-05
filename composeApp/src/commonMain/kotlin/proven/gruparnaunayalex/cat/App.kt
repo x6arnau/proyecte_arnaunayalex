@@ -129,7 +129,6 @@ fun LoginScreen(
     ) {
 
         Spacer(modifier = Modifier.height(16.dp))
-        Text("Or sign up with email")
         var email by remember { mutableStateOf("") }
         var password by remember { mutableStateOf("") }
         var isloggedWithEmail by remember { mutableStateOf(false) }
@@ -237,35 +236,48 @@ fun LoginScreen(
             }) {
                 Text("Sign Up")
             }
-
         }
+        Text("Or sign up with")
         Row(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier.padding(8.dp)
         ) {
+
             Button(onClick = { authState.startFlow() }) {
-                Text("Sign in with Google")
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    AsyncImage(
+                        model = "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/800px-Google_%22G%22_logo.svg.png", // URL de la imagen
+                        contentDescription = "Discord Logo",
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
             }
-        }
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.padding(8.dp)
-        ) {
-            Button(onClick = {
-                isloggedWithDiscord = true
-            }) {
-                Text("Sign in with Discord")
+            Button(onClick = { isloggedWithDiscord = true }) {
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    AsyncImage(
+                        model = "https://assets-global.website-files.com/6257adef93867e50d84d30e2/636e0a6a49cf127bf92de1e2_icon_clyde_blurple_RGB.png", // URL de la imagen
+                        contentDescription = "Discord Logo",
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
             }
-        }
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.padding(8.dp)
-        ) {
-
-            Button(onClick = {
-                isloggedWithGithub = true
-            }) {
-                Text("Sign in with Github")
+            Button(onClick = { isloggedWithGithub = true }) {
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    AsyncImage(
+                        model = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTKfpcT9pukR3OGAg5MzGXR0aopy7CRbEGjQYeprsv57ecKJlo4eRiZYuou9e_RAtuseHE&usqp=CAU",
+                        contentDescription = "Github Logo",
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
             }
 
         }
@@ -488,7 +500,6 @@ fun LogOutScreen(navController: NavController, supabase: SupabaseClient) {
         }
     }
 }
-
 
 @Composable
 fun Nav(controller: NavController) {
