@@ -15,17 +15,15 @@ class MainActivity : ComponentActivity() {
         if (DatabaseConfig.development) {
             this.applicationContext.deleteDatabase(DatabaseConfig.name)
         }
-      val driver = AndroidSqliteDriver(Database.Schema, this.applicationContext, DatabaseConfig.name)
-
+        val driver = AndroidSqliteDriver(Database.Schema, this.applicationContext, DatabaseConfig.name)
         setContent {
             App(driver)
         }
     }
 }
 
-
 //@Preview
 //@Composable
 //fun AppAndroidPreview() {
-//    App()
+//   App()
 //}

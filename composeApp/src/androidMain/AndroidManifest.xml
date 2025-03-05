@@ -14,7 +14,7 @@
             android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
+                <data android:scheme="bocadillos" android:host="login-callback" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>

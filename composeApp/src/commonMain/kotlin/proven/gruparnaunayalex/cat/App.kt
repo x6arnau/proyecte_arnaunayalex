@@ -197,7 +197,7 @@ fun LoginScreen(
         LaunchedEffect(isloggedWithGithub) {
             if(isloggedWithGithub){
                 try {
-                    supabase.auth.signInWith(Github, redirectUrl = "https://wqybldibsllassuxepxy.supabase.co/auth/v1/callback") {
+                    supabase.auth.signInWith(Github,redirectUrl = "bocadillos://login-callback") {
                     }
                 } catch (e: Exception) {
                     println("Registration error: ${e.message}")
@@ -210,7 +210,7 @@ fun LoginScreen(
         LaunchedEffect(isloggedWithDiscord) {
             if(isloggedWithDiscord){
                 try {
-                    supabase.auth.signInWith(Discord, redirectUrl = "https://discord.com/oauth2/authorize?client_id=1346859355982659706&response_type=code&redirect_uri=https%3A%2F%2Fwqybldibsllassuxepxy.supabase.co%2Fauth%2Fv1%2Fcallback&scope=identify+email") {
+                    supabase.auth.signInWith(Discord, redirectUrl = "bocadillos://login-callback") {
                     }
                 } catch (e: Exception) {
                     println("Registration error: ${e.message}")
