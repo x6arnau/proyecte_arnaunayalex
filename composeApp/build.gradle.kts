@@ -31,6 +31,9 @@ kotlin {
             implementation(libs.androidx.activity.compose)
         }
         commonMain.dependencies {
+            implementation("io.coil-kt.coil3:coil-compose:3.1.0")
+            implementation("io.coil-kt.coil3:coil-network-okhttp:3.1.0")
+
             implementation("androidx.credentials:credentials:1.3.0")
             implementation(compose.material3)
             implementation("androidx.credentials:credentials-play-services-auth:1.3.0")

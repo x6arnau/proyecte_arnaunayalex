@@ -18,6 +18,12 @@ import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.auth.FlowType
 import io.github.jan.supabase.auth.auth
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.border
+import androidx.compose.foundation.shape.CircleShape
+import coil3.compose.AsyncImage
 import io.github.jan.supabase.auth.providers.Discord
 import io.github.jan.supabase.auth.providers.Github
 import io.github.jan.supabase.auth.providers.builtin.Email
@@ -33,6 +39,7 @@ import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.query.Columns
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import androidx.compose.ui.draw.clip
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
@@ -230,11 +237,30 @@ fun LoginScreen(
             }) {
                 Text("Sign Up")
             }
+
+        }
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.padding(8.dp)
+        ) {
+            Button(onClick = { authState.startFlow() }) {
+                Text("Sign in with Google")
+            }
+        }
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.padding(8.dp)
+        ) {
             Button(onClick = {
                 isloggedWithDiscord = true
             }) {
                 Text("Sign in with Discord")
             }
+        }
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.padding(8.dp)
+        ) {
 
             Button(onClick = {
                 isloggedWithGithub = true
@@ -242,28 +268,41 @@ fun LoginScreen(
                 Text("Sign in with Github")
             }
 
-            Button(onClick = { authState.startFlow() }) {
-                Text("Sign in with Google")
-            }
-
         }
     }
 }
-
 
 @Serializable
 object ListSandwiches
 
 @Serializable
-object Login
+data class CartItem(
+    val sandwich: Sandwich,
+    var quantity: Int = 1
+)
+object CartState {
+    private val _items = mutableStateOf<List<CartItem>>(emptyList())
+    val items: State<List<CartItem>> = _items
 
-//Crear la dataclass Sandwich
+    fun addItem(sandwich: Sandwich) {
+        val currentItems = _items.value.toMutableList()
+        val existingItem = currentItems.find { it.sandwich.id == sandwich.id }
+        if (existingItem != null) {
+            existingItem.quantity++
+        } else {
+            currentItems.add(CartItem(sandwich))
+        }
+        _items.value = currentItems
+    }
+}
+
 @Serializable
 data class Sandwich(
     val id: Int,
     val name: String,
     val description: String,
-    val price: Double
+    val price: Double,
+    val url: String //TODO: Add url field
 )
 
 @Composable
@@ -271,19 +310,21 @@ fun SandwichesScreen(navController: NavController, supabase: SupabaseClient) {
     var sandwiches by remember { mutableStateOf<List<Sandwich>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
     showMessageIntro()
+
     LaunchedEffect(Unit) {
         try {
-            //TODO revisar owo
-            val query = supabase.from("sandwiches").select(columns = Columns.list("id", "name", "description", "price"))
+            val query = supabase.from("sandwiches").select(columns = Columns.list("id", "name", "description", "price", "url"))
             sandwiches = query.decodeList<Sandwich>()
             isLoading = false
         } catch (e: Exception) {
             isLoading = false
         }
     }
+
     Column {
         Nav(navController)
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(16.dp))
+        Text("Sandwiches available", modifier = Modifier.align(Alignment.CenterHorizontally))
         when {
             isLoading -> CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
             else -> LazyColumn {
@@ -294,11 +335,37 @@ fun SandwichesScreen(navController: NavController, supabase: SupabaseClient) {
                             .padding(8.dp),
                         elevation = 4.dp
                     ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Text(sandwich.name)
-                            Text(sandwich.description)
-                            Text("${sandwich.price}€")
-                            //TODO añadir botón para añadir al carrito
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            AsyncImage(
+                                model = sandwich.url,
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .size(128.dp, 96.dp) // 4:3 aspect ratio
+                                    .border(
+                                        BorderStroke(4.dp, Color.DarkGray),
+                                        RoundedCornerShape(8.dp)
+                                    )
+                                    .padding(4.dp)
+                                    .clip(RoundedCornerShape(8.dp))
+                            )
+                            Spacer(modifier = Modifier.width(16.dp))
+                            Column(
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text(sandwich.name)
+                                Text(sandwich.description)
+                                Text("${sandwich.price}€")
+                            }
+                            Button(
+                                onClick = { CartState.addItem(sandwich) }
+                            ) {
+                                Text("Add to Cart")
+                            }
                         }
                     }
                 }
@@ -307,11 +374,14 @@ fun SandwichesScreen(navController: NavController, supabase: SupabaseClient) {
     }
 }
 
+var showMessage = true
+
 @Composable
 fun showMessageIntro() {
     var openAlertDialog by remember { mutableStateOf(true) }
 
-    if (openAlertDialog) {
+    if (openAlertDialog && showMessage) {
+        showMessage = false
         AlertDialog(
             onDismissRequest = { openAlertDialog = false },
             title = { Text("Welcome to the Sandwiches Store \uD83D\uDE0E") },
@@ -327,19 +397,66 @@ fun showMessageIntro() {
         )
     }
 }
-
 @Serializable
 object ListCesta
 
 @Composable
-fun CestaScreen(navController: NavController, supabase: SupabaseClient){
+fun CestaScreen(navController: NavController, supabase: SupabaseClient) {
+    val cartItems by CartState.items
+    val total = cartItems.sumOf { it.sandwich.price * it.quantity }
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally
-   ){
-       Nav(navController)
-        Text("Cesta")
-   }
-
+    ) {
+        Nav(navController)
+        Spacer(modifier = Modifier.height(16.dp))
+        Text("Shopping Cart")
+        if (cartItems.isEmpty()) {
+            Text("Your cart is empty", modifier = Modifier.padding(16.dp))
+        } else {
+            LazyColumn(
+                modifier = Modifier.weight(1f)
+            ) {
+                items(cartItems) { item ->
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            AsyncImage(
+                                model = item.sandwich.url,
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .size(64.dp, 48.dp) // 4:3 aspect ratio
+                                    .border(
+                                        BorderStroke(4.dp, Color.DarkGray),
+                                        RoundedCornerShape(8.dp)
+                                    )
+                                    .padding(4.dp)
+                                    .clip(RoundedCornerShape(8.dp))
+                            )
+                            Spacer(modifier = Modifier.width(16.dp))
+                            Column(
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text(item.sandwich.name)
+                                Text("${item.sandwich.price}€ x ${item.quantity}")
+                            }
+                            Text("${item.sandwich.price * item.quantity}€")
+                        }
+                    }
+                }
+            }
+            Text(
+                "Total: ${total}€",
+                modifier = Modifier.padding(16.dp)
+            )
+        }
+    }
 }
 
 @Serializable
@@ -374,18 +491,29 @@ fun LogOutScreen(navController: NavController, supabase: SupabaseClient) {
 
 
 @Composable
-fun Nav (controller:NavController){
+fun Nav(controller: NavController) {
+    val cartItems by CartState.items
+    val itemCount = cartItems.sumOf { it.quantity }
+
     TopAppBar(
         title = { Text("Sandwiches Store") },
         actions = {
-                    IconButton(onClick = {controller.navigate(ListCesta)}) {
-                        Icon(imageVector = Icons.Filled.ShoppingCart, contentDescription = "ShoppingCart")
+            IconButton(onClick = { controller.navigate(ListCesta) }) {
+                BadgedBox(
+                    badge = {
+                        if (itemCount > 0) {
+                            Badge { Text(itemCount.toString()) }
+                        }
                     }
-                    IconButton(onClick = {controller.navigate(ListSandwiches)}) {
-                        Icon(imageVector = Icons.Filled.Home, contentDescription = "Home")
-                    }
-                    IconButton(onClick = {controller.navigate(LogOut)}){
-                        Icon(imageVector = Icons.Filled.Close, contentDescription = "Close")
+                ) {
+                    Icon(imageVector = Icons.Filled.ShoppingCart, contentDescription = "ShoppingCart")
+                }
+            }
+            IconButton(onClick = { controller.navigate(ListSandwiches) }) {
+                Icon(imageVector = Icons.Filled.Home, contentDescription = "Home")
+            }
+            IconButton(onClick = { controller.navigate(LogOut) }) {
+                Icon(imageVector = Icons.Filled.Close, contentDescription = "Close")
             }
         }
     )
