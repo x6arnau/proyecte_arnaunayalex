@@ -8,6 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import app.cash.sqldelight.driver.android.AndroidSqliteDriver
 import io.github.jan.supabase.auth.auth
+import proven.gruparnaunayalex.cat.data.Database
 
 class MainActivity : ComponentActivity() {
 

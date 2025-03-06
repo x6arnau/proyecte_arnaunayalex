@@ -1,0 +1,11 @@
+CREATE TABLE IF NOT EXISTS Factura (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    order_time Text NOT NULL,
+    total REAL NOT NULL
+);
+
+select:
+SELECT * FROM Factura;
+
+insert:
+INSERT INTO Factura (order_time, total) VALUES (?, ?);

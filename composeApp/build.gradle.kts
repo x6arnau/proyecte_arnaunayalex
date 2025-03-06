@@ -128,7 +128,7 @@ compose.desktop {
 sqldelight {
     databases {
         create("Database") {
-            packageName.set("proven.gruparnaunayalex.cat")
+            packageName.set("proven.gruparnaunayalex.cat.data")
             dialect("app.cash.sqldelight:sqlite-3-38-dialect:2.0.2")
         }
     }

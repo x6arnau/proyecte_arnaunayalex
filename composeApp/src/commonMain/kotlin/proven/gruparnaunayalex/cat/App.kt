@@ -44,12 +44,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.sp
 import app.cash.sqldelight.db.SqlDriver
-import io.github.jan.supabase.auth.status.SessionSource.Storage
 import io.github.jan.supabase.postgrest.postgrest
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import kotlinx.datetime.Clock
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import kotlinx.serialization.Serializable
 import org.jetbrains.compose.ui.tooling.preview.Preview
+import proven.gruparnaunayalex.cat.data.Database
 
 object SupabaseProvider {
     val client = createSupabaseClient(
@@ -75,7 +77,7 @@ sealed class AuthState {
 }
 
 object DatabaseConfig {
-    val name: String = "pets.db"
+    val name: String = "sandwich.db"
     val development: Boolean = true
 }
 
@@ -127,7 +129,7 @@ fun App(sqlDriver: SqlDriver) {
                             SandwichesScreen(navController, supabase)
                         }
                         composable<ListCesta> {
-                            CestaScreen(navController, supabase)
+                            CestaScreen(navController, supabase, database)
                         }
                         composable<LogOut> {
                             LogOutScreen(navController, supabase)
@@ -410,7 +412,7 @@ fun SandwichesScreen(navController: NavController, supabase: SupabaseClient) {
                                         BorderStroke(4.dp, Color.DarkGray),
                                         RoundedCornerShape(8.dp)
                                     )
-                                    .padding(4.dp)
+                                    .padding(2.dp)
                                     .clip(RoundedCornerShape(8.dp))
                             )
                             Spacer(modifier = Modifier.width(16.dp))
@@ -471,11 +473,31 @@ fun showMessageIntro() {
     }
 }
 
+@Composable
+fun showMessageFactura() {
+    var openAlertDialog2 by remember { mutableStateOf(true) }
+
+    if (openAlertDialog2) {
+        AlertDialog(
+            onDismissRequest = { openAlertDialog2 = false },
+            title = { Text("Invoice") },
+            text = { Text("Your invoice was generated!") },
+            confirmButton = {
+                TextButton(onClick = {
+                    openAlertDialog2 = false
+                }) {
+                    Text("Confirm")
+                }
+            }
+        )
+    }
+}
+
 @Serializable
 object ListCesta
 
 @Composable
-fun CestaScreen(navController: NavController, supabase: SupabaseClient) {
+fun CestaScreen(navController: NavController, supabase: SupabaseClient, database: Database) {
     var scope = rememberCoroutineScope()
     val cartItems by CartState.items
     val total = cartItems.sumOf { it.sandwich.price * it.quantity }
@@ -511,7 +533,7 @@ fun CestaScreen(navController: NavController, supabase: SupabaseClient) {
                                         BorderStroke(4.dp, Color.DarkGray),
                                         RoundedCornerShape(8.dp)
                                     )
-                                    .padding(4.dp)
+                                    .padding(2.dp)
                                     .clip(RoundedCornerShape(8.dp))
                             )
                             Spacer(modifier = Modifier.width(16.dp))
@@ -537,21 +559,29 @@ fun CestaScreen(navController: NavController, supabase: SupabaseClient) {
                     Text("Clear shopping cart")
                 }
                 Text("   ")
-                Button(onClick ={
+                Button(onClick = {
                     scope.launch {
                         val pg = supabase.postgrest
-                        val id = pg.from("orders").insert(OrdersInsert(total)){select()}
-                    }
+                        val response = pg.from("orders").insert(OrdersInsert(total)){select()}
+                        val insertedOrder = response.decodeAs<List<Orders>>().last()
+                        val orderId = insertedOrder.id
 
-                } ){
+                        for (item in cartItems){
+                            pg.from("order_items").insert(InsertOrder_Items(orderId, item.sandwich.id, item.quantity)){select()}
+                        }
+
+                        val currentDateTime = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+                        val formattedDate = "${currentDateTime.year}-${currentDateTime.monthNumber}-${currentDateTime.dayOfMonth} ${currentDateTime.hour}:${currentDateTime.minute}"
+                        database.facturaQueries.insert(formattedDate, total)
+                    }
+                }){
                     Text("Generate invoice")
                 }
             }
-
-
         }
     }
 }
+
 @Serializable
 data class Order_items(
     val order_id: Int,
@@ -569,8 +599,8 @@ data class InsertOrder_Items(
 @Serializable
 data class Orders(
     val id:Int,
-    val order_date: Long,
-    val total_price:Double
+    val order_date: String,
+    val total_price: Double
 )
 
 @Serializable
