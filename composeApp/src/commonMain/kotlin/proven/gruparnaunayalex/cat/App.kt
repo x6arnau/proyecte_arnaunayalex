@@ -136,6 +136,7 @@ fun App(sqlDriver: SqlDriver) {
         }
     }
 }
+
 @Composable
 fun LoginScreen(
     supabase: SupabaseClient
@@ -146,6 +147,13 @@ fun LoginScreen(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+
+        AsyncImage(
+            model = "https://i.postimg.cc/L6GTh3kP/Preview.jpg",
+            contentDescription = "Sandwich Shop Logo",
+            modifier = Modifier
+                .size(240.dp)
+        )
 
         Spacer(modifier = Modifier.height(16.dp))
         var email by remember { mutableStateOf("") }
@@ -333,6 +341,10 @@ object CartState {
         }
         _items.value = currentItems
     }
+
+    fun clear (sandwich: Sandwich) {
+        val currentItems = _items.value.toMutableList()
+    }
 }
 
 @Serializable
@@ -457,6 +469,7 @@ fun showMessageIntro() {
         )
     }
 }
+
 @Serializable
 object ListCesta
 
@@ -515,6 +528,16 @@ fun CestaScreen(navController: NavController, supabase: SupabaseClient) {
                 "Total: ${total}€",
                 modifier = Modifier.padding(16.dp)
             )
+            Column {
+                Button(onClick = {
+                    CartState.
+                }){
+                    Text("Clear shopping cart")
+                }
+                Button(onClick ={} ){
+                    Text("Generate invoice")
+                }
+            }
         }
     }
 }
