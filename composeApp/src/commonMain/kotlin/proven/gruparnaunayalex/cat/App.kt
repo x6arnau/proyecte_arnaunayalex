@@ -417,10 +417,14 @@ fun SandwichesScreen(navController: NavController, supabase: SupabaseClient) {
                                     color = Color.Red
                                 )
                             }
-                            Button(
+                            IconButton(
                                 onClick = { CartState.addItem(sandwich) }
                             ) {
-                                Text("Add to Cart")
+                                Icon(
+                                    imageVector = Icons.Filled.ShoppingCart,
+                                    contentDescription = "Add to Cart",
+                                    tint = MaterialTheme.colors.primary
+                                )
                             }
                         }
                     }
