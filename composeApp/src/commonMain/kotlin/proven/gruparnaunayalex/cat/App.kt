@@ -45,7 +45,9 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.sp
 import app.cash.sqldelight.db.SqlDriver
 import io.github.jan.supabase.auth.status.SessionSource.Storage
+import io.github.jan.supabase.postgrest.postgrest
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
@@ -210,7 +212,6 @@ fun LoginScreen(
             if (isloggedWithGithub) {
                 try {
                     supabase.auth.signInWith(Github,redirectUrl = "bocadillos://login-callback") {
-
                     }
                 } catch (e: Exception) {
                     println("Registration error: ${e.message}")
@@ -342,8 +343,8 @@ object CartState {
         _items.value = currentItems
     }
 
-    fun clear (sandwich: Sandwich) {
-        val currentItems = _items.value.toMutableList()
+    fun clear() {
+        _items.value = emptyList()
     }
 }
 
@@ -475,6 +476,7 @@ object ListCesta
 
 @Composable
 fun CestaScreen(navController: NavController, supabase: SupabaseClient) {
+    var scope = rememberCoroutineScope()
     val cartItems by CartState.items
     val total = cartItems.sumOf { it.sandwich.price * it.quantity }
 
@@ -528,19 +530,53 @@ fun CestaScreen(navController: NavController, supabase: SupabaseClient) {
                 "Total: ${total}€",
                 modifier = Modifier.padding(16.dp)
             )
-            Column {
+            Row {
                 Button(onClick = {
-                    CartState.
+                    CartState.clear();navController.navigate(ListCesta)
                 }){
                     Text("Clear shopping cart")
                 }
-                Button(onClick ={} ){
+                Text("   ")
+                Button(onClick ={
+                    scope.launch {
+                        val pg = supabase.postgrest
+                        val id = pg.from("orders").insert(OrdersInsert(total)){select()}
+                    }
+
+                } ){
                     Text("Generate invoice")
                 }
             }
+
+
         }
     }
 }
+@Serializable
+data class Order_items(
+    val order_id: Int,
+    val sandwich_id: Int,
+    val quantity: Int
+)
+
+@Serializable
+data class InsertOrder_Items(
+    val order_id: Int,
+    val sandwich_id: Int,
+    val quantity: Int
+)
+
+@Serializable
+data class Orders(
+    val id:Int,
+    val order_date: Long,
+    val total_price:Double
+)
+
+@Serializable
+data class OrdersInsert(
+    val total_price: Double
+)
 
 @Serializable
 object LogOut
