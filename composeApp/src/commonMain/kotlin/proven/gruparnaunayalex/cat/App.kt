@@ -44,6 +44,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.sp
 import app.cash.sqldelight.db.SqlDriver
+import io.github.jan.supabase.auth.status.SessionSource.Storage
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import org.jetbrains.compose.ui.tooling.preview.Preview
@@ -55,14 +56,14 @@ object SupabaseProvider {
     ) {
         install(Auth){
             flowType = FlowType.PKCE
-            scheme = "app"
-            host = "supabase.com"
+            scheme = "bocadillos"
+            host = "login-callback"
         }
         install(ComposeAuth) {
             googleNativeLogin("751473724477-0ncgg8ohhufjjbatot4nb0onsj6elsgr.apps.googleusercontent.com")
         }
         install(Postgrest)
-        install(Storage)
+       // install(Storage)
     }
 }
 sealed class AuthState {
@@ -70,6 +71,7 @@ sealed class AuthState {
     object Authenticated : AuthState()
     object Unauthenticated : AuthState()
 }
+
 object DatabaseConfig {
     val name: String = "pets.db"
     val development: Boolean = true
@@ -83,8 +85,6 @@ fun App(sqlDriver: SqlDriver) {
     if (DatabaseConfig.development) {
 
     }
-
-
 
     val supabase = SupabaseProvider.client
     var authState by remember { mutableStateOf<AuthState>(AuthState.Checking) }
@@ -140,8 +140,9 @@ fun App(sqlDriver: SqlDriver) {
 fun LoginScreen(
     supabase: SupabaseClient
 ) {
-    Column(
+    val coroutineScope = rememberCoroutineScope()
 
+    Column(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -198,30 +199,31 @@ fun LoginScreen(
             }
         }
         LaunchedEffect(isloggedWithGithub) {
-            if(isloggedWithGithub){
+            if (isloggedWithGithub) {
                 try {
-                    supabase.auth.signInWith(Github) {
+                    supabase.auth.signInWith(Github,redirectUrl = "bocadillos://login-callback") {
+
                     }
                 } catch (e: Exception) {
                     println("Registration error: ${e.message}")
+                } finally {
+                    isloggedWithGithub = false
                 }
-            }else{
-                println("No se ha logeado")
-            }
 
+            }
         }
         LaunchedEffect(isloggedWithDiscord) {
-            if(isloggedWithDiscord){
+            if (isloggedWithDiscord) {
                 try {
-                    supabase.auth.signInWith(Discord) {
+                    supabase.auth.signInWith(Discord, redirectUrl = "bocadillos://login-callback") {
                     }
                 } catch (e: Exception) {
                     println("Registration error: ${e.message}")
+                } finally {
+                    isloggedWithDiscord = false
                 }
-            }else{
-                println("No se ha logeado")
-            }
 
+            }
         }
 
         TextField(

@@ -30,11 +30,12 @@ kotlin {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
             implementation("app.cash.sqldelight:android-driver:2.0.2")
+            implementation ("io.github.jan-tennert.supabase:postgrest-kt:3.0.3")
+            implementation ("io.ktor:ktor-client-android:3.0.3")
         }
         commonMain.dependencies {
             implementation("io.coil-kt.coil3:coil-compose:3.1.0")
             implementation("io.coil-kt.coil3:coil-network-okhttp:3.1.0")
-
             implementation("androidx.credentials:credentials:1.3.0")
             implementation(compose.material3)
             implementation("androidx.credentials:credentials-play-services-auth:1.3.0")
