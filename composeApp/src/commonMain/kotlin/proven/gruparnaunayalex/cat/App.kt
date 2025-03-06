@@ -55,11 +55,14 @@ object SupabaseProvider {
     ) {
         install(Auth){
             flowType = FlowType.PKCE
+            scheme = "app"
+            host = "supabase.com"
         }
         install(ComposeAuth) {
             googleNativeLogin("751473724477-0ncgg8ohhufjjbatot4nb0onsj6elsgr.apps.googleusercontent.com")
         }
         install(Postgrest)
+        install(Storage)
     }
 }
 sealed class AuthState {
@@ -197,7 +200,7 @@ fun LoginScreen(
         LaunchedEffect(isloggedWithGithub) {
             if(isloggedWithGithub){
                 try {
-                    supabase.auth.signInWith(Github,redirectUrl = "bocadillos://login-callback") {
+                    supabase.auth.signInWith(Github) {
                     }
                 } catch (e: Exception) {
                     println("Registration error: ${e.message}")
@@ -210,7 +213,7 @@ fun LoginScreen(
         LaunchedEffect(isloggedWithDiscord) {
             if(isloggedWithDiscord){
                 try {
-                    supabase.auth.signInWith(Discord, redirectUrl = "bocadillos://login-callback") {
+                    supabase.auth.signInWith(Discord) {
                     }
                 } catch (e: Exception) {
                     println("Registration error: ${e.message}")
